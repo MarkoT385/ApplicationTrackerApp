@@ -1,6 +1,7 @@
 import cookieParser from 'cookie-parser';
 import express from 'express';
 import { createAuthRouter, requireAuth } from './auth.js';
+import { createApplicationsRouter } from './applications.js';
 import { createStagesRouter } from './stages.js';
 
 export function createApp({ pool, jwtSecret, cookieSecure = false }) {
@@ -10,8 +11,7 @@ export function createApp({ pool, jwtSecret, cookieSecure = false }) {
   app.use(cookieParser());
   app.use('/api/auth', createAuthRouter({ pool, jwtSecret, cookieSecure }));
 
-  // Keep the entire applications API private when its routes are added.
-  app.use('/api/applications', requireAuth(jwtSecret));
+  app.use('/api/applications', requireAuth(jwtSecret), createApplicationsRouter({ pool }));
   app.use('/api/stages', requireAuth(jwtSecret), createStagesRouter({ pool }));
 
   app.use((error, _req, res, _next) => {

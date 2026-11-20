@@ -47,4 +47,23 @@ export async function initializeDatabase() {
     ) AS default_stages
     WHERE NOT EXISTS (SELECT 1 FROM stages WHERE stages.user_id = users.id)
   `);
+
+  await pool.query(`
+    CREATE TABLE IF NOT EXISTS applications (
+      id BIGINT UNSIGNED NOT NULL AUTO_INCREMENT PRIMARY KEY,
+      user_id BIGINT UNSIGNED NOT NULL,
+      stage_id BIGINT UNSIGNED NULL,
+      company_name VARCHAR(150) NOT NULL,
+      role_title VARCHAR(150) NOT NULL,
+      job_link VARCHAR(2048) NULL,
+      deadline DATE NULL,
+      notes TEXT NULL,
+      created_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
+      updated_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+      INDEX applications_user_updated (user_id, updated_at),
+      INDEX applications_stage (stage_id),
+      CONSTRAINT applications_user_fk FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE,
+      CONSTRAINT applications_stage_fk FOREIGN KEY (stage_id) REFERENCES stages(id) ON DELETE SET NULL
+    ) ENGINE=InnoDB
+  `);
 }
