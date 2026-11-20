@@ -116,6 +116,20 @@ function AuthPage({ mode, onAuthenticated }) {
 
 function ProtectedDashboard({ user, onLogout }) {
   const [error, setError] = useState('');
+  const [stages, setStages] = useState([]);
+  const [stageError, setStageError] = useState('');
+  const [stageLoading, setStageLoading] = useState(true);
+  const [stageBusy, setStageBusy] = useState(false);
+  const [newStageName, setNewStageName] = useState('');
+  const [editingStageId, setEditingStageId] = useState(null);
+  const [editingName, setEditingName] = useState('');
+
+  useEffect(() => {
+    apiRequest('/api/stages')
+      .then(({ stages: savedStages }) => setStages(savedStages))
+      .catch((requestError) => setStageError(requestError.message))
+      .finally(() => setStageLoading(false));
+  }, []);
 
   async function handleLogout() {
     try {
@@ -123,6 +137,56 @@ function ProtectedDashboard({ user, onLogout }) {
       onLogout();
     } catch (requestError) {
       setError(requestError.message);
+    }
+  }
+
+  async function handleAddStage(event) {
+    event.preventDefault();
+    setStageError('');
+    setStageBusy(true);
+    try {
+      const { stage } = await apiRequest('/api/stages', {
+        method: 'POST',
+        body: JSON.stringify({ name: newStageName }),
+      });
+      setStages((current) => [...current, stage]);
+      setNewStageName('');
+    } catch (requestError) {
+      setStageError(requestError.message);
+    } finally {
+      setStageBusy(false);
+    }
+  }
+
+  async function handleRenameStage(event, stageId) {
+    event.preventDefault();
+    setStageError('');
+    setStageBusy(true);
+    try {
+      const { stage } = await apiRequest(`/api/stages/${stageId}`, {
+        method: 'PATCH',
+        body: JSON.stringify({ name: editingName }),
+      });
+      setStages((current) => current.map((item) => item.id === stage.id ? stage : item));
+      setEditingStageId(null);
+      setEditingName('');
+    } catch (requestError) {
+      setStageError(requestError.message);
+    } finally {
+      setStageBusy(false);
+    }
+  }
+
+  async function handleDeleteStage(stageId) {
+    setStageError('');
+    setStageBusy(true);
+    try {
+      await apiRequest(`/api/stages/${stageId}`, { method: 'DELETE' });
+      setStages((current) => current.filter((stage) => stage.id !== stageId));
+    } catch (requestError) {
+      setStageError(requestError.message);
+    } finally {
+      setStageBusy(false);
     }
   }
 
@@ -135,8 +199,78 @@ function ProtectedDashboard({ user, onLogout }) {
       <section className="welcome-card">
         <p className="eyebrow">YOUR PRIVATE WORKSPACE</p>
         <h1>Welcome, {user.username}.</h1>
-        <p>Your account is ready. This is where your application dashboard will live.</p>
+        <p>Your application journey starts here. Make the stages fit the way you work.</p>
         {error && <p className="form-error" role="alert">{error}</p>}
+      </section>
+      <section className="stage-manager" aria-labelledby="stage-manager-title">
+        <div className="stage-manager-heading">
+          <div>
+            <p className="eyebrow">YOUR APPLICATION PIPELINE</p>
+            <h2 id="stage-manager-title">Manage stages</h2>
+            <p>Add or rename stages to match your personal process.</p>
+          </div>
+          <span className="stage-count">{stages.length} {stages.length === 1 ? 'stage' : 'stages'}</span>
+        </div>
+
+        {stageLoading ? (
+          <p className="stage-empty">Loading your stages…</p>
+        ) : (
+          <ul className="stage-list">
+            {stages.map((stage) => (
+              <li className="stage-row" key={stage.id}>
+                {editingStageId === stage.id ? (
+                  <form className="stage-rename-form" onSubmit={(event) => handleRenameStage(event, stage.id)}>
+                    <label className="visually-hidden" htmlFor={`stage-${stage.id}`}>Stage name</label>
+                    <input
+                      autoFocus
+                      id={`stage-${stage.id}`}
+                      maxLength={50}
+                      onChange={(event) => setEditingName(event.target.value)}
+                      required
+                      value={editingName}
+                    />
+                    <div className="stage-actions">
+                      <button className="secondary-button" disabled={stageBusy} type="submit">Save</button>
+                      <button className="text-button" disabled={stageBusy} onClick={() => setEditingStageId(null)} type="button">Cancel</button>
+                    </div>
+                  </form>
+                ) : (
+                  <>
+                    <span className="stage-name"><span className="stage-dot" aria-hidden="true" />{stage.name}</span>
+                    <div className="stage-actions">
+                      <button
+                        className="text-button"
+                        disabled={stageBusy}
+                        onClick={() => { setEditingStageId(stage.id); setEditingName(stage.name); }}
+                        type="button"
+                      >
+                        Rename
+                      </button>
+                      <button className="danger-button" disabled={stageBusy} onClick={() => handleDeleteStage(stage.id)} type="button">
+                        Delete
+                      </button>
+                    </div>
+                  </>
+                )}
+              </li>
+            ))}
+            {!stages.length && <li className="stage-empty">No stages yet. Add one to get started.</li>}
+          </ul>
+        )}
+
+        <form className="stage-add-form" onSubmit={handleAddStage}>
+          <label className="visually-hidden" htmlFor="new-stage-name">New stage name</label>
+          <input
+            id="new-stage-name"
+            maxLength={50}
+            onChange={(event) => setNewStageName(event.target.value)}
+            placeholder="e.g. Final Interview"
+            required
+            value={newStageName}
+          />
+          <button className="primary-button" disabled={stageBusy || !newStageName.trim()} type="submit">Add stage <span aria-hidden="true">+</span></button>
+        </form>
+        {stageError && <p className="form-error" role="alert">{stageError}</p>}
       </section>
     </main>
   );

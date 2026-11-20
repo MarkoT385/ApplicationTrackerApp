@@ -1,6 +1,7 @@
 import cookieParser from 'cookie-parser';
 import express from 'express';
 import { createAuthRouter, requireAuth } from './auth.js';
+import { createStagesRouter } from './stages.js';
 
 export function createApp({ pool, jwtSecret, cookieSecure = false }) {
   const app = express();
@@ -11,6 +12,7 @@ export function createApp({ pool, jwtSecret, cookieSecure = false }) {
 
   // Keep the entire applications API private when its routes are added.
   app.use('/api/applications', requireAuth(jwtSecret));
+  app.use('/api/stages', requireAuth(jwtSecret), createStagesRouter({ pool }));
 
   app.use((error, _req, res, _next) => {
     console.error('Request failed:', error);

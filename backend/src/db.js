@@ -20,4 +20,31 @@ export async function initializeDatabase() {
       created_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP
     ) ENGINE=InnoDB
   `);
+
+  await pool.query(`
+    CREATE TABLE IF NOT EXISTS stages (
+      id BIGINT UNSIGNED NOT NULL AUTO_INCREMENT PRIMARY KEY,
+      user_id BIGINT UNSIGNED NOT NULL,
+      name VARCHAR(50) NOT NULL,
+      position INT NOT NULL,
+      created_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
+      UNIQUE KEY unique_user_stage_name (user_id, name),
+      INDEX stages_user_position (user_id, position),
+      CONSTRAINT stages_user_fk FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE
+    ) ENGINE=InnoDB
+  `);
+
+  await pool.query(`
+    INSERT INTO stages (user_id, name, position)
+    SELECT users.id, default_stages.name, default_stages.position
+    FROM users
+    CROSS JOIN (
+      SELECT 'Saved' AS name, 0 AS position
+      UNION ALL SELECT 'Applied', 1
+      UNION ALL SELECT 'Interview', 2
+      UNION ALL SELECT 'Offer', 3
+      UNION ALL SELECT 'Rejected', 4
+    ) AS default_stages
+    WHERE NOT EXISTS (SELECT 1 FROM stages WHERE stages.user_id = users.id)
+  `);
 }

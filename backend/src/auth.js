@@ -1,6 +1,7 @@
 import bcrypt from 'bcryptjs';
 import { Router } from 'express';
 import jwt from 'jsonwebtoken';
+import { DEFAULT_STAGES } from './stageDefaults.js';
 
 const COOKIE_NAME = 'auth_token';
 const TOKEN_TTL_SECONDS = 60 * 60;
@@ -76,6 +77,12 @@ export function createAuthRouter({ pool, jwtSecret, cookieSecure }) {
       const [result] = await pool.execute(
         'INSERT INTO users (username, email, password_hash) VALUES (?, ?, ?)',
         [normalizedUsername, normalizedEmail, passwordHash],
+      );
+      const stageValues = DEFAULT_STAGES.flatMap((name, position) => [result.insertId, name, position]);
+      const stagePlaceholders = DEFAULT_STAGES.map(() => '(?, ?, ?)').join(', ');
+      await pool.execute(
+        `INSERT INTO stages (user_id, name, position) VALUES ${stagePlaceholders}`,
+        stageValues,
       );
       const user = {
         id: result.insertId,
