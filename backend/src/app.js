@@ -4,7 +4,7 @@ import { createAuthRouter, requireAuth } from './auth.js';
 import { createApplicationsRouter } from './applications.js';
 import { createStagesRouter } from './stages.js';
 
-export function createApp({ pool, jwtSecret, cookieSecure = false }) {
+export function createApp({ pool, jwtSecret, cookieSecure = false, staticDir }) {
   const app = express();
 
   app.use(express.json({ limit: '10kb' }));
@@ -14,6 +14,18 @@ export function createApp({ pool, jwtSecret, cookieSecure = false }) {
 
   app.use('/api/applications', requireAuth(jwtSecret), createApplicationsRouter({ pool }));
   app.use('/api/stages', requireAuth(jwtSecret), createStagesRouter({ pool }));
+
+  if (staticDir) {
+    app.use(express.static(staticDir));
+    app.get('*', (req, res, next) => {
+      if (req.path === '/api' || req.path.startsWith('/api/')) {
+        return next();
+      }
+      return res.sendFile('index.html', { root: staticDir }, (error) => {
+        if (error) next(error);
+      });
+    });
+  }
 
   app.use((error, _req, res, _next) => {
     console.error('Request failed:', error);

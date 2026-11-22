@@ -12,7 +12,8 @@ await initializeDatabase();
 const app = createApp({
   pool,
   jwtSecret,
-  cookieSecure: process.env.COOKIE_SECURE === 'true',
+  cookieSecure: process.env.NODE_ENV === 'production' || process.env.COOKIE_SECURE === 'true',
+  staticDir: process.env.STATIC_DIR,
 });
 
 app.listen(port, () => {
