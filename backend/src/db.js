@@ -1,14 +1,25 @@
 import mysql from 'mysql2/promise';
 
-export const pool = mysql.createPool({
-  host: process.env.DB_HOST ?? 'localhost',
-  port: Number(process.env.DB_PORT ?? 3306),
-  database: process.env.DB_NAME ?? 'application_tracker',
-  user: process.env.DB_USER ?? 'tracker',
-  password: process.env.DB_PASSWORD,
-  waitForConnections: true,
-  connectionLimit: 10,
-});
+export function createPoolConfig(env = process.env) {
+  const connectionOptions = {
+    database: env.DB_NAME ?? 'application_tracker',
+    user: env.DB_USER ?? 'tracker',
+    password: env.DB_PASSWORD,
+    waitForConnections: true,
+    connectionLimit: 10,
+  };
+
+  if (env.DB_SOCKET_PATH) {
+    connectionOptions.socketPath = env.DB_SOCKET_PATH;
+  } else {
+    connectionOptions.host = env.DB_HOST ?? 'localhost';
+    connectionOptions.port = Number(env.DB_PORT ?? 3306);
+  }
+
+  return connectionOptions;
+}
+
+export const pool = mysql.createPool(createPoolConfig());
 
 export async function initializeDatabase() {
   await pool.query(`

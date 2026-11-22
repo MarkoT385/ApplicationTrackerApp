@@ -1,5 +1,8 @@
 import assert from 'node:assert/strict';
 import bcrypt from 'bcryptjs';
+import { mkdtemp, rm, writeFile } from 'node:fs/promises';
+import os from 'node:os';
+import path from 'node:path';
 import { after, before, test } from 'node:test';
 import request from 'supertest';
 import { createApp } from '../src/app.js';
@@ -186,6 +189,22 @@ test('health endpoint reports that the API is ready', async () => {
   assert.deepEqual(response.body, { status: 'ok' });
 });
 
+test('production app serves the frontend for client-side routes but not unknown API routes', async () => {
+  const staticDir = await mkdtemp(path.join(os.tmpdir(), 'career-tracker-static-'));
+  try {
+    await writeFile(path.join(staticDir, 'index.html'), '<!doctype html><title>Career Tracker</title>');
+    const productionApp = createApp({ pool, jwtSecret: JWT_SECRET, staticDir });
+
+    await request(productionApp)
+      .get('/dashboard')
+      .expect(200)
+      .expect(/Career Tracker/);
+    await request(productionApp).get('/api/unknown').expect(404);
+  } finally {
+    await rm(staticDir, { recursive: true, force: true });
+  }
+});
+
 test('signup hashes the password and creates a session', async () => {
   const response = await request(app)
     .post('/api/auth/signup')
@@ -199,6 +218,16 @@ test('signup hashes the password and creates a session', async () => {
     'Saved', 'Applied', 'Interview', 'Offer', 'Rejected',
   ]);
   assert.match(response.headers['set-cookie'][0], /HttpOnly/);
+});
+
+test('secure sessions mark the authentication cookie Secure', async () => {
+  const secureApp = createApp({ pool, jwtSecret: JWT_SECRET, cookieSecure: true });
+  const response = await request(secureApp)
+    .post('/api/auth/signup')
+    .send({ username: 'secure_user', email: 'secure@example.com', password: 'a-strong-password' })
+    .expect(201);
+
+  assert.match(response.headers['set-cookie'][0], /Secure/);
 });
 
 test('users can create, rename, delete, and reload their own stages', async () => {
