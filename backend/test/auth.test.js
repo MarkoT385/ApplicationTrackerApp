@@ -35,7 +35,7 @@ const pool = {
       for (let index = 0; index < values.length; index += 3) {
         stages.push({ id: nextStageId++, user_id: Number(values[index]), name: values[index + 1], position: values[index + 2] });
       }
-      return [{ affectedRows: values.length / 3 }];
+      return [{ affectedRows: values.length / 3, insertId: stages.at(-1)?.id }];
     }
     if (query.includes('SELECT COALESCE(MAX(position)')) {
       const userStages = stages.filter((stage) => stage.user_id === Number(values[0]));
