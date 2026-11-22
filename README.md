@@ -74,6 +74,28 @@ The starter production image builds the React app and serves it, together with t
 
 This is an initial deployment path, not a claim of production hardening. Review access controls, backups, monitoring, and abuse protection before using it with real users.
 
+### Deploy the backend and frontend as separate services
+
+The Cloud Build configs `cloudbuild-backend.yaml` and `frontend-backend.yaml` deploy the existing backend and frontend Dockerfiles as separate Cloud Run services. The frontend image runs the Vite server and proxies `/api` requests to the backend; this is a demo deployment setup, while the combined root Dockerfile above is the recommended production image.
+
+Create the `career-tracker` Artifact Registry repository as described above, and ensure the Cloud Build service account can push images, deploy Cloud Run services, attach Cloud SQL, and access the `db-password` and `jwt-secret` secrets. The Cloud Run runtime service account also needs Cloud SQL Client and access to those secrets.
+
+Deploy the backend first, replacing the project, region, and instance placeholders:
+
+```bash
+gcloud builds submit --config=cloudbuild-backend.yaml \
+  --substitutions=_REGION=us-central1,_INSTANCE_CONNECTION_NAME=PROJECT_ID:us-central1:INSTANCE_NAME .
+```
+
+Then use the deployed backend's `run.app` URL for the frontend:
+
+```bash
+gcloud builds submit --config=frontend-backend.yaml \
+  --substitutions=_REGION=us-central1,_BACKEND_URL=https://BACKEND_SERVICE_URL .
+```
+
+Open the `app-frontend` Cloud Run service URL. The frontend container uses the repository's Vite development server, so use this split setup for demos; use the combined production image above for a production deployment.
+
 ## Run the backend tests
 
 ```bash

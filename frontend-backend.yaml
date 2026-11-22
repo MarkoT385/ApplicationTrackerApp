@@ -1,0 +1,31 @@
+steps:
+  - name: gcr.io/cloud-builders/docker
+    args:
+      - build
+      - -t
+      - ${_REGION}-docker.pkg.dev/$PROJECT_ID/career-tracker/app-frontend:$SHORT_SHA
+      - ./frontend
+
+  - name: gcr.io/cloud-builders/docker
+    args:
+      - push
+      - ${_REGION}-docker.pkg.dev/$PROJECT_ID/career-tracker/app-frontend:$SHORT_SHA
+
+  - name: gcr.io/cloud-builders/gcloud
+    args:
+      - run
+      - deploy
+      - app-frontend
+      - --image=${_REGION}-docker.pkg.dev/$PROJECT_ID/career-tracker/app-frontend:$SHORT_SHA
+      - --platform=managed
+      - --region=${_REGION}
+      - --allow-unauthenticated
+      - --port=5173
+      - --set-env-vars=VITE_API_PROXY_TARGET=${_BACKEND_URL}
+
+substitutions:
+  _REGION: us-central1
+  _BACKEND_URL: https://REPLACE_WITH_BACKEND_SERVICE_URL
+
+options:
+  logging: CLOUD_LOGGING_ONLY
