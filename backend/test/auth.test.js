@@ -181,6 +181,11 @@ after(() => {
   applications.length = 0;
 });
 
+test('health endpoint reports that the API is ready', async () => {
+  const response = await request(app).get('/api/health').expect(200);
+  assert.deepEqual(response.body, { status: 'ok' });
+});
+
 test('signup hashes the password and creates a session', async () => {
   const response = await request(app)
     .post('/api/auth/signup')

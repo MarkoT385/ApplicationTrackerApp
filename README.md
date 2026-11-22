@@ -1,24 +1,49 @@
-# Job Application and Career Tracker
+# Career Tracker
 
-The **Job Application and Career Tracker** is an easy-to-use personal dashboard that keeps internships, graduate school applications, and job openings organized in one place. When applying to many opportunities at once, tracking deadlines and updates across scattered spreadsheets and notes quickly becomes overwhelming. This app solves that problem by giving users a single, private workspace to see where every application stands and what needs attention next.
+Career Tracker is a private job-application dashboard. Create an account to track opportunities, deadlines, notes, and progress through a customizable application pipeline.
 
-## Key Features
-- **Customizable Pipeline Stages:** Track applications across default stages (*Saved, Applied, Interview, Offer, Rejected*) or customize stage names to fit your workflow.
-- **Application Details & Notes:** Save deadlines, job posting links, company info, and contact notes in one spot.
-- **Skills Tracker:** Record required skills for each role and view which technical skills appear most frequently across your applications.
-- **Dashboard & Search:** View stage counts, upcoming deadlines, and filter applications by keyword or stage.
-- **AI Career Helper:** Paste a job description to automatically extract required skills and generate tailored interview preparation questions.
+## Features
 
-## Technology Stack
-- **Frontend:** React
-- **Backend:** Node.js, Express
-- **Database:** MySQL
-- **AI Integration:** LLM API (for skill extraction and interview question generation) & GitHub Copilot (development assistance)
-- **Containerization & Deployment:** Docker, Docker Compose, GitHub Actions, Google Cloud Run
+- Create an account and sign in with a username or email address.
+- Add, edit, move, and delete job applications.
+- Save job links, deadlines, and notes for each application.
+- View application counts by stage and deadlines due in the next seven days.
+- Add, rename, and delete personal pipeline stages.
+- Keep account and application data in a persistent MySQL database.
 
-## Getting Started (Local Setup)
+## Run the app locally with Docker
 
-1. **Clone the repository:**
+You need [Docker Desktop](https://www.docker.com/products/docker-desktop/) (or Docker Engine with the Compose plugin) running.
+
+1. From the repository root, start the complete app:
+
    ```bash
-   git clone [https://github.com/YOUR-USERNAME/job-application-tracker.git](https://github.com/YOUR-USERNAME/job-application-tracker.git)
-   cd job-application-tracker
+   docker compose up --build
+   ```
+
+2. Open **http://localhost:5173** in your browser. Create an account on the sign-up page, then start tracking applications.
+
+The first start builds the frontend and backend images and may take a few minutes. The API is also available at **http://localhost:3001**. MySQL data is kept in a Docker volume when the containers stop.
+
+To stop the app, press `Ctrl+C`, then run:
+
+```bash
+docker compose down
+```
+
+Run `docker compose up` to reopen it later. Your account and applications remain saved.
+
+The Compose defaults are for local development only. Set a private `JWT_SECRET` in a root `.env` file before using this setup anywhere accessible to other people.
+
+## Run the backend tests
+
+```bash
+npm --prefix backend test
+```
+
+## Technology
+
+- React and Vite frontend
+- Node.js and Express API
+- MySQL database
+- Docker Compose local development environment
