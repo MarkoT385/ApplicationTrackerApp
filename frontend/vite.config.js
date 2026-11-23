@@ -6,7 +6,10 @@ export default defineConfig({
   server: {
     allowedHosts: true,
     proxy: {
-      '/api': process.env.VITE_API_PROXY_TARGET ?? 'http://localhost:3001',
+      '/api': {
+        target: process.env.VITE_API_PROXY_TARGET ?? 'https://app-backend-27462043200.us-central1.run.app',
+        changeOrigin: true,
+      },
     },
   },
   preview: {
