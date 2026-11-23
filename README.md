@@ -2,6 +2,15 @@
 
 Career Tracker is a private job-application dashboard. Create an account to track opportunities, deadlines, notes, and progress through a customizable application pipeline.
 
+## Project links and submission evidence
+
+- **GitHub repository:** [MarkoT385/ApplicationTrackerApp](https://github.com/MarkoT385/ApplicationTrackerApp)
+- **Branch utilization:** [Deployment feature branch merged into `main` (PR #1)](https://github.com/MarkoT385/ApplicationTrackerApp/pull/1)
+- **Commit history:** [Commits on `main`](https://github.com/MarkoT385/ApplicationTrackerApp/commits/main)
+- **Google Cloud deployment:** [Career Tracker frontend](https://app-frontend-27462043200.us-central1.run.app) — the URL currently responds with HTTP 403; access may need to be enabled or the service URL updated.
+- **Jira project:** Add the public Jira project URL here.
+- **Confluence space:** Add the public Confluence space URL here.
+
 ## Features
 
 - Create an account and sign in with a username or email address.
@@ -76,7 +85,7 @@ This is an initial deployment path, not a claim of production hardening. Review 
 
 ### Deploy the backend and frontend as separate services
 
-The Cloud Build configs `cloudbuild-backend.yaml` and `frontend-backend.yaml` deploy the existing backend and frontend Dockerfiles as separate Cloud Run services. The frontend image runs the Vite server and proxies `/api` requests to the backend; this is a demo deployment setup, while the combined root Dockerfile above is the recommended production image.
+The Cloud Build configs `cloudbuild-backend.yaml` and `cloudbuild-frontend.yaml` deploy the existing backend and frontend Dockerfiles as separate Cloud Run services. The frontend image runs the Vite server and proxies `/api` requests to the backend; this is a demo deployment setup, while the combined root Dockerfile above is the recommended production image.
 
 Create the `career-tracker` Artifact Registry repository as described above, and ensure the Cloud Build service account can push images, deploy Cloud Run services, attach Cloud SQL, and access the `db-password` and `jwt-secret` secrets. The Cloud Run runtime service account also needs Cloud SQL Client and access to those secrets.
 
@@ -90,7 +99,7 @@ gcloud builds submit --config=cloudbuild-backend.yaml \
 Then use the deployed backend's `run.app` URL for the frontend:
 
 ```bash
-gcloud builds submit --config=frontend-backend.yaml \
+gcloud builds submit --config=cloudbuild-frontend.yaml \
   --substitutions=_REGION=us-central1,_BACKEND_URL=https://BACKEND_SERVICE_URL .
 ```
 
