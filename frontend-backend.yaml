@@ -25,7 +25,7 @@ steps:
 
 substitutions:
   _REGION: us-central1
-  _BACKEND_URL: https://REPLACE_WITH_BACKEND_SERVICE_URL
+  _BACKEND_URL: https://app-backend-27462043200.us-central1.run.app 
 
 options:
   logging: CLOUD_LOGGING_ONLY
